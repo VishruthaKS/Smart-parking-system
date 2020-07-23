@@ -1,0 +1,123 @@
+{% extends "home/base.html" %}
+{% block navbarlist %}
+    <li><a class="active" href="#">Home</a></li>
+    <li><a href="/reserve">Book a slot</a></li>
+    <li><a href="#balance">My Balance</a></li>
+    <li><a href="#">Add E-Cash</a></li>
+    <li><a href="/logout">Logout</a></li>
+    <li><a href="/about">About</a></li>
+{% endblock navbarlist %}
+{% block content %}
+
+<div id="book_a_slot">
+    <h3 style="color: #FFF;">Hello there, {{ user.username }}</h3><br><br>
+
+
+    <center><h2 style="color: #FFF;">Messages:</h2></center>
+    
+
+    <center>
+        <h2 style="color: #FFF;">Realtime Slot Updates :</h2>
+    </center><br>
+    <div class="book-slots">
+        <div class="card-body-slots">
+            <div>
+                <h4 style="display: inline;">Select place : </h4><br><br>
+                <select style="display:inline-block;" class="select_places" id="select_places" onchange="updateSlotCardsOnce()" name="place">
+                    <option disabled selected value> -- select an option -- </option>
+                    {%for place in places %}
+                    <option value="{{place.value}}">{{place.name}}</option>
+                    {% endfor %}
+                </select> 
+            </div><br>
+            <div id="update-slot-cards"style="display: block;"></div>
+        
+        </div>
+        
+    </div>
+
+    
+    <div id="parking_history">
+        <center><h2 style="color: #FFF;">Your Parking History :</h2></center>
+    <!-- Parking Card Dynamic-->
+    
+
+        {%for parkingCard in parkingCards %}
+        <div class="card card-4">
+            <div class="card-body-slots">
+                <div>
+                    <label class="label"><h3>{{parkingCard.place}}</h3></label>
+                    <label class="label">Arrival Time : {{parkingCard.arrival_time}}</label>
+                    <label class="label">Departure Time : {{parkingCard.departure_time}}</label>
+                    <label class="label">Date : {{parkingCard.date}}</label>
+                    <label class="label">Price : {{parkingCard.price}}</label>
+                </div>
+            </div>
+        </div><br>
+        {% endfor %}  
+
+    
+    
+    <!-- end  -->
+    </div>
+    <div id="balance">
+        <center><h2 style="color: #FFF;">My Balance :</h2></center>
+    <div class="card card-4">
+        <div class="card-body-slots">
+            <div>
+                <label class="label"><h3>Available Rs : {{balanceCard.current}}</h3></label>
+                <label class="label">Due Rs : {{balanceCard.due}}</label>
+            </div>
+        </div>
+    </div><br>
+    </div>
+    <script>
+
+    var token = '{{csrf_token}}';
+
+    function updateSlotCardsOnce(){
+        var _place = document.getElementById("select_places").value;
+        $.ajax({
+          type:"GET",
+          headers: { "X-CSRFToken": token },
+          url: 'http://'+window.location.hostname+':'+location.port+'/realtime-slot-info',
+          data: {
+            place : _place
+          },
+          success: function (response) {
+            document.getElementById('update-slot-cards').innerHTML = response;
+          },
+          error: function(request, error){
+            document.getElementById('update-slot-cards').innerHTML = '<div class="slots-info"><h4>Error updating the slot information, Please check your Internet connection.</h4></div>';
+          }
+        });
+      }
+      
+      function updateSlotCards(){
+        var _place = document.getElementById("select_places").value;
+        $.ajax({
+          type:"GET",
+          headers: { "X-CSRFToken": token },
+          url: 'http://'+window.location.hostname+':'+location.port+'/realtime-slot-info',
+          data: {
+            place : _place
+          },
+          success: function (response) {
+            document.getElementById('update-slot-cards').innerHTML = response;
+          },
+          complete: function(data){
+            setTimeout(updateSlotCards,5000);
+           },
+          error: function(request, error){
+            document.getElementById('update-slot-cards').innerHTML = '<div class="slots-info"><h4>Error updating the slot information, Please check your Internet connection.</h4></div>';
+          }
+        });
+      }
+      
+      $(document).ready(function(){
+        setTimeout(updateSlotCards,5000);
+       });
+
+
+    </script>    
+{% endblock content %}
